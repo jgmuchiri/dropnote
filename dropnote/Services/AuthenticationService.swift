@@ -42,16 +42,25 @@ final class AuthenticationService {
         if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
             do {
                 return try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
+            } catch let laError as LAError {
+                // A cancel or failed attempt must never fall through to the app
+                // password flow. Only fall back if the system can't authenticate.
+                switch laError.code {
+                case .userCancel, .systemCancel, .appCancel, .authenticationFailed:
+                    return false
+                default:
+                    break
+                }
             } catch {
-                // Fall through to password authentication
+                return false
             }
         }
         
+        // Never create a credential inside an unlock flow: a missing password must
+        // not let whoever is at the keyboard choose a new one. Passwords are only
+        // set when a note is locked (see ensurePasswordOrBiometricsConfigured).
         guard let existingPassword = getPassword() else {
-            return await promptAndSetPassword(
-                title: "Set Password",
-                message: "Set an app password to unlock locked notes."
-            )
+            return false
         }
         
         let enteredPassword = promptForSecureText(title: "Enter Password", message: reason)
