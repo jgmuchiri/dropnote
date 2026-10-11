@@ -84,7 +84,7 @@ struct FullWindowView: View {
                     onMoveNote: { from, to in store.move(id: from, toPositionOf: to) },
                     onFloatNote: { id in
                         if let note = store.note(id) {
-                            FloatingNoteWindowController.shared.show(note: note)
+                            FloatingNoteWindowController.shared.showAuthenticated(note: note)
                         }
                     },
                     onSetExpiry: { id, date in store.setExpiry(date, id: id) },

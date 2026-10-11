@@ -198,7 +198,7 @@ struct ContentView: View {
                     },
                     onRequestFloat: { id in
                         if let note = store.note(id) {
-                            FloatingNoteWindowController.shared.show(note: note)
+                            FloatingNoteWindowController.shared.showAuthenticated(note: note)
                         }
                     },
                     onSetExpiry: { id, date in store.setExpiry(date, id: id) },

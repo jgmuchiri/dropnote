@@ -36,6 +36,10 @@ struct FloatingNoteView: View {
         .shadow(color: .black.opacity(0.16), radius: 16, x: 0, y: 6)
         .opacity(windowOpacity)
         .appAccent()
+        // If the note gets (re-)locked while floating, don't keep showing its content.
+        .onChange(of: note?.isLocked ?? false) { _, nowLocked in
+            if nowLocked { onClose() }
+        }
     }
 
     // MARK: - Title Bar

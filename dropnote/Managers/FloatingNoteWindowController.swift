@@ -23,6 +23,18 @@ final class FloatingNoteWindowController: NSWindowController {
 
     required init?(coder: NSCoder) { nil }
 
+    /// Shows the note, asking the user to authenticate first if it is locked.
+    func showAuthenticated(note: Note) {
+        guard note.isLocked else {
+            show(note: note)
+            return
+        }
+        Task { @MainActor in
+            let ok = await AuthenticationService.shared.authenticate(reason: "Float \"\(note.title)\"")
+            if ok { show(note: note) }
+        }
+    }
+
     func show(note: Note) {
         let view = FloatingNoteView(note: note, onClose: { [weak self] in
             self?.window?.orderOut(nil)
