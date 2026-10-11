@@ -25,10 +25,14 @@ final class NotesFileService {
     
     func saveNotes(_ notes: [Note]) {
         let folderURL = notesPath.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: folderURL,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
         
         if let data = try? JSONEncoder().encode(notes) {
-            try? data.write(to: notesPath)
+            writeProtected(data)
         }
     }
     
@@ -45,8 +49,18 @@ final class NotesFileService {
         
         if needsSave {
             if let updatedData = try? JSONEncoder().encode(notes) {
-                try? updatedData.write(to: notesPath)
+                writeProtected(updatedData)
             }
+        }
+    }
+
+    /// Atomic write (a crash can't leave a truncated file) readable only by the user.
+    private func writeProtected(_ data: Data) {
+        do {
+            try data.write(to: notesPath, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: notesPath.path)
+        } catch {
+            NSLog("DropNote: failed to save notes: \(error.localizedDescription)")
         }
     }
 }
